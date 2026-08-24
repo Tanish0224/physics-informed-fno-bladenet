@@ -1,0 +1,5 @@
+model: fno
+modes: 8
+width: 32
+lambda_phys: 1.0
+batch_size: 4
