@@ -6,7 +6,7 @@ This project implements a controlled comparison between a baseline Fourier Neura
 Both models use the identical underlying 3D FNO architecture, initialized with:
 - 8 Fourier modes across all three spatial dimensions.
 - A channel width of 16.
-- A standard MSE loss formulation for the data-driven component.
+- A standard MSE loss formulation for the data - driven component.
 
 ## Physics Regularization
 The baseline FNO is trained purely on the data-driven MSE loss, optimizing for global structural accuracy (Relative $L_2$). 
