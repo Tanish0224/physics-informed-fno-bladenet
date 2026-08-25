@@ -81,3 +81,9 @@ python scripts/train_and_evaluate.py --config configs/pifno.yaml --run-low-data
 
 ## Dataset Attribution
 The dataset utilized in this repository originates from the `lrwei/bladenet` collection hosted on HuggingFace.
+
+## Technical Report
+
+A detailed technical report covering the motivation, methodology, experimental protocol, results, discussion, and limitations of this investigation is available here:
+
+[Read the Technical Report (PDF)](docs/reports/physics_informed_fno_technical_report.pdf)
