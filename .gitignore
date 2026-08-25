@@ -3,3 +3,7 @@ data/
 *.npy
 *.npz
 __pycache__/
+
+results/predictions/
+results/checkpoints/
+results/evaluation/

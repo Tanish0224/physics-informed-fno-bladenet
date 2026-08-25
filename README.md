@@ -1,147 +1,83 @@
-# Physics-Informed Neural Operators for Aerodynamic Flow-Field Prediction
-*Physics-aware Fourier Neural Operator surrogate modelling for reducing non-physical flow artifacts during geometric extrapolation.*
+# Physics-Informed Neural Operators for Flow Field Prediction
 
-## Project Overview
-Aerodynamic flow-field prediction is traditionally expensive due to the high computational cost of conventional Computational Fluid Dynamics (CFD). While neural surrogates like Fourier Neural Operators (FNO) can drastically accelerate prediction speeds, they often generate physically inconsistent vector fields—particularly when extrapolating to unseen geometries.
+Neural operators can predict aerodynamic flow fields significantly faster than conventional Computational Fluid Dynamics (CFD) solvers. However, low overall field error does not automatically guarantee that the predictions are physically consistent. This project investigates whether adding a continuity-based physics regularization term to a Fourier Neural Operator (FNO) can reduce local physical inconsistencies when predicting flow over unseen blade geometries.
 
-This project investigates whether adding a continuity-based physical regularization loss to an FNO (yielding a PI-FNO) can force the network to respect fluid dynamics equations better, minimizing non-physical flow artifacts during geometric extrapolation.
+## The Engineering Problem
 
----
+Purely data-driven surrogate models (like a standard FNO) minimize global structural error (Relative $L_2$ against CFD ground-truth) but remain entirely unaware of the underlying physics. As a result, they often produce velocity fields that violate local continuity (conservation of mass), especially when extrapolating.
 
-## Key Result
-> **98.5% reduction in aggregate held-out continuity residual across 50 test geometries**, while the PI-FNO incurred a **+0.0036 absolute Relative L2 trade-off**.
-
-- **50/50** test geometries exhibited strictly improved physical continuity.
-- Hyperparameter selection (loss weighting $\lambda = 1.0$) was executed **strictly on the validation set**.
-- The held-out test set remained **completely unseen** during model and hyperparameter selection.
-
----
+By explicitly penalizing non-physical divergence during training, a Physics-Informed FNO (PI-FNO) forces the network to respect fluid dynamics equations. The core question is whether this physics regularization can improve physical consistency without causing an unacceptable loss of predictive accuracy.
 
 ## What I Built
-The technical pipeline was designed and executed from scratch:
-**Geometry $\rightarrow$ Flow-field data $\rightarrow$ Preprocessing $\rightarrow$ Baseline FNO $\rightarrow$ Physics-aware FNO (PI-FNO) $\rightarrow$ Validation-based lambda selection $\rightarrow$ Blind test evaluation $\rightarrow$ Field-level analysis**
 
----
+I developed a controlled comparison between a baseline FNO and a PI-FNO. The pipeline covers geometry preprocessing, model implementation, and blind evaluation.
 
-## Why Physics Regularization?
-Pure data-driven models (like a baseline FNO) minimize global structural error (Relative $L_2$ against ground-truth fields) but remain unaware of the underlying physics, often producing velocity fields that violate local continuity (conservation of mass).
+To ensure the results were reliable, I kept the experimental protocol strictly separated:
+- **100** geometries for training
+- **25** geometries for validation (used exclusively to select the physics regularization weight, $\lambda$)
+- **50** geometries for held-out testing
 
-By explicitly encoding a discrete local continuity residual into the training objective, the PI-FNO is penalized for non-physical divergence. 
+The regularization strength ($\lambda = 1.0$) was selected on the validation set before any models were evaluated on the 50 held-out test geometries, ensuring the final metrics reflect true generalization.
 
-**The Central Trade-off**:
-The PI-FNO dedicates network capacity to satisfying the physics residual, leading to substantially lower physical violation at the expense of a very small reduction in global field accuracy.
+## Final Results
 
----
-
-## Experimental Protocol
-
-### Data Split
-- **100** train geometries
-- **25** validation geometries
-- **50** held-out test geometries
-
-### Hyperparameter Selection
-- The physics-loss weighting factor ($\lambda$) candidates were evaluated exclusively on the **25 validation geometries**.
-- $\lambda = 1.0$ was selected using a predefined validation rule (maximizing continuity improvement while bounding $L_2$ degradation).
-- The 50 test geometries were absolutely blind to this selection.
-
-### Final Evaluation
-- Final selected models were evaluated on the held-out test set exactly once.
-
----
-
-## Results
+The physics regularization successfully corrected the structural flow violations at the cost of a minor accuracy trade-off.
 
 | Model | Relative L2 | Continuity Residual |
-|-------|------------|---------------------|
+|-------|-------------|---------------------|
 | FNO | 0.1558 | 1.5468 |
 | PI-FNO | 0.1594 | 0.0225 |
 
-**Conclusion**: The PI-FNO achieved a **98.5%** local continuity reduction across the blind test set. **100% (50/50)** of the evaluated geometries improved physically, confirming that the physics regularization acts effectively as a domain-wide structural corrector, albeit requiring a small (+0.0036) accuracy trade-off.
+**Key Findings:**
+- The PI-FNO reduced the defined local continuity residual by **98.5%** on the held-out test set.
+- **100% (50/50)** of the test geometries showed strictly improved physical continuity.
+- The global accuracy trade-off for enforcing this physics constraint was **+0.0036** in Relative $L_2$.
 
----
+### Low-Data Behavior
+I also investigated how the models perform when data is heavily constrained (N=25 training geometries). Under data scarcity, the mean accuracy penalty for using the PI-FNO shrank to approximately 0.00175, suggesting that physics-informed constraints become increasingly valuable when data is limited.
 
-## Representative Flow-Field Comparisons
+## Visual Comparison
 
-### 1. Representative Median Case (Geometry 000110)
+### 1. Representative Median Case
 ![CASE_A_000110](figures/results/CASE_A_000110.png)
-*Observation: PI-FNO largely retains the macro flow features while suppressing local unphysical high-frequency artifacts (visible in the continuity residual field).*
+The PI-FNO retains the macro flow features while actively suppressing the unphysical high-frequency artifacts that appear in the baseline FNO's continuity residual field.
 
-### 2. Strongest Continuity Improvement (Geometry 000177)
+### 2. High Continuity Improvement
 ![CASE_B_000177](figures/results/CASE_B_000177.png)
-*Observation: FNO struggles profoundly with physical consistency in this boundary configuration. PI-FNO massively regularizes the field, eliminating the chaotic residual violations.*
+In challenging boundary configurations, the baseline FNO struggles profoundly with physical consistency. The PI-FNO massively regularizes the field, eliminating the chaotic residual violations.
 
-### 3. Optimal Trade-off Profile (Geometry 000068)
+### 3. Optimal Trade-off
 ![CASE_K_000068](figures/results/CASE_K_000068.png)
-*Observation: In optimal cases, PI-FNO suppresses the continuity residual without inducing any perceptible loss in visual structural accuracy.*
-
----
-
-## Local Hardware
-The complete training, validation, and testing lifecycle was successfully executed locally on standard workstation hardware:
-- **CPU**: AMD Ryzen 7 6800H (~16 GB RAM)
-- **GPU**: NVIDIA GeForce RTX 3050 Ti Laptop GPU (4 GB VRAM)
-- **Environment**: PyTorch 2.5.1 + CUDA 12.1, FP32 Precision
-
----
+In many cases, the PI-FNO suppresses the continuity residual without inducing any visually perceptible loss in structural accuracy.
 
 ## Reproducibility
 
-### 1. Quick Smoke Test
-To verify the environment and code execution loop (1 epoch, dummy data logic):
+The complete training, validation, and testing lifecycle was executed locally on standard workstation hardware (AMD Ryzen 7 6800H, RTX 3050 Ti 4GB, PyTorch 2.5.1).
+
+**Quick Environment Check:**
 ```bash
 python scripts/train_and_evaluate.py --smoke-test
 ```
 
-### 2. Data Preparation
-To acquire the geometry fields:
+**Dataset Acquisition:**
 ```bash
-python scripts/download_data.py
+python scripts/download_data.py  # Prints instructions
 ```
 
-### 3. Full Local GPU Reproduction
-To reproduce the full pipeline (Train $\rightarrow$ Validation Selection $\rightarrow$ Final Test):
+**Full Execution:**
 ```bash
 python scripts/train_and_evaluate.py --config configs/pifno.yaml
 ```
 
----
-
-## Repository Structure
+**Optional Low-Data Study:**
+```bash
+python scripts/train_and_evaluate.py --config configs/pifno.yaml --run-low-data
 ```
-physics-informed-fno-bladenet/
-├── configs/
-│   └── pifno.yaml
-├── data/
-├── docs/
-├── figures/
-│   └── results/
-├── results/
-│   ├── claim_summary.md
-│   └── final_metrics.csv
-├── scripts/
-│   ├── download_data.py
-│   └── train_and_evaluate.py
-├── src/
-│   └── models/
-│       ├── fno3d.py
-│       └── spectral_conv3d.py
-├── tests/
-├── .gitignore
-├── README.md
-└── requirements.txt
-```
-
----
 
 ## Limitations
-- **Local Continuity vs. Global Mass Conservation**: The implemented continuity residual acts as a local physics regularizer; it does not theoretically guarantee strict domain-wide mass conservation.
-- **Not a Strict direct CFD substitute**: Due to the intrinsic (+0.0036) Relative $L_2$ accuracy trade-off, this surrogate model accelerates inference but does not match exact CFD structural fidelity.
-- **Regime Specificity**: Findings are strictly bound to the evaluated BladeNet geometric dataset regime (128x32x16 grids).
-- **Hyperparameter Dependency**: The selected $\lambda = 1.0$ is the specific optimal factor derived for this dataset under this protocol, not a universal optimum for all PDE constraints.
-
----
+- **Local Continuity vs. Global Mass Conservation**: The implemented continuity residual acts as a local physics regularizer. It does not guarantee exact global mass conservation across the entire domain.
+- **Accuracy Penalty**: The PI-FNO incurs a small but measurable (+0.0036) Relative $L_2$ penalty compared to the unconstrained model. It is not a direct CFD substitute.
+- **Dataset Regime**: These findings apply specifically to the evaluated BladeNet geometric dataset regime (128x32x16 grids).
 
 ## Dataset Attribution
-The dataset utilized in this repository originates from the `lrwei/bladenet` collection hosted on HuggingFace. All dataset usage strictly defers to the original repository's licensing and attribution guidelines. 
-
+The dataset utilized in this repository originates from the `lrwei/bladenet` collection hosted on HuggingFace.
