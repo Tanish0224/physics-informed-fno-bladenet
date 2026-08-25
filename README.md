@@ -87,3 +87,9 @@ The dataset utilized in this repository originates from the `lrwei/bladenet` col
 A detailed technical report covering the motivation, methodology, experimental protocol, results, discussion, and limitations of this investigation is available here:
 
 [Read the Technical Report (PDF)](docs/reports/physics_informed_fno_technical_report.pdf)
+
+## Contributors
+
+- [Tanish Shetty](https://github.com/Tanish0224)
+- [Vishal UC](https://github.com/VISH-104)
+- [Tushank Bisht](https://github.com/tushankb07)
