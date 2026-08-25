@@ -1,6 +1,7 @@
 # Physics-Informed Neural Operators for Flow Field Prediction
 
-Neural operators can predict aerodynamic flow fields significantly faster than conventional Computational Fluid Dynamics (CFD) solvers. However, low overall field error does not automatically guarantee that the predictions are physically consistent. This project investigates whether adding a continuity-based physics regularization term to a Fourier Neural Operator (FNO) can reduce local physical inconsistencies when predicting flow over unseen blade geometries.
+Neural operators can predict aerodynamic flow fields significantly faster than conventional Computational Fluid Dynamics (CFD) solvers. However, low overall field error does not necessarily guarantee that predictions are physically consistent. This project investigates whether adding a **continuity-based physics regularization term** to a **Fourier Neural Operator (FNO)** can reduce local physical inconsistencies when predicting flow over **unseen blade geometries**.
+
 
 ## The Engineering Problem
 
