@@ -9,7 +9,7 @@ Purely data-driven surrogate models (like a standard FNO) minimize global struct
 
 By explicitly penalizing non-physical divergence during training, a Physics-Informed FNO (PI-FNO) forces the network to respect fluid dynamics equations. The core question is whether this physics regularization can improve physical consistency without causing an unacceptable loss of predictive accuracy.
 
-## What I Built
+## What We Built
 
 I developed a controlled comparison between a baseline FNO and a PI-FNO. The pipeline covers geometry preprocessing, model implementation, and blind evaluation.
 
